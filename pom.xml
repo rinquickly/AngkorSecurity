@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>studio.krud</groupId>
+    <artifactId>angkorsecurity</artifactId>
+    <version>1.2.0</version>
+    <packaging>jar</packaging>
+
+    <name>AngkorSecurity</name>
+    <description>Advanced security plugin for KrudSMP</description>
+    <developers>
+        <developer><name>Krud Studio</name></developer>
+    </developers>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>papermc</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>1.21.4-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.luckperms</groupId>
+            <artifactId>api</artifactId>
+            <version>5.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-minimessage</artifactId>
+            <version>4.17.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}-${project.version}</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+        <plugins>
+
+            <!-- Compiler -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <compilerArgs><arg>-Xlint:none</arg></compilerArgs>
+                </configuration>
+            </plugin>
+
+            <!-- Shade -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ProGuard — Zelix J-style obfuscation -->
+            <plugin>
+                <groupId>com.github.wvengen</groupId>
+                <artifactId>proguard-maven-plugin</artifactId>
+                <version>2.6.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.guardsquare</groupId>
+                        <artifactId>proguard-base</artifactId>
+                        <version>7.9.1</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>com.guardsquare</groupId>
+                        <artifactId>proguard-core</artifactId>
+                        <version>9.3.2</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>proguard</goal></goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <proguardVersion>7.9.1</proguardVersion>
+                    <obfuscate>true</obfuscate>
+                    <injar>${project.build.finalName}.jar</injar>
+                    <outjar>${project.build.finalName}-obf.jar</outjar>
+                    <libs>
+                        <lib>${java.home}/jmods/java.base.jmod</lib>
+                        <lib>${java.home}/jmods/java.logging.jmod</lib>
+                        <lib>${java.home}/jmods/java.net.http.jmod</lib>
+                    </libs>
+                    <options>
+                        <!-- Keep main class -->
+                        <option>-keep class studio.krud.angkorsecurity.AngkorSecurity { *; }</option>
+                        <!-- Keep Bukkit listener methods -->
+                        <option>-keepclassmembers class * implements org.bukkit.event.Listener {
+                            @org.bukkit.event.EventHandler &lt;methods&gt;;
+                        }</option>
+                        <!-- Keep commands -->
+                        <option>-keep class * implements org.bukkit.command.CommandExecutor { *; }</option>
+                        <option>-keep class * implements org.bukkit.command.TabCompleter { *; }</option>
+                        <!-- Keep Runnable.run() -->
+                        <option>-keepclassmembers class * implements java.lang.Runnable {
+                            public void run();
+                        }</option>
+                        <!-- Zelix J-style naming -->
+                        <option>-classobfuscationdictionary obf-dictionary.txt</option>
+                        <option>-obfuscationdictionary obf-dictionary.txt</option>
+                        <option>-packageobfuscationdictionary obf-dictionary.txt</option>
+                        <!-- Flatten package like ProCasino -->
+                        <option>-repackageclasses 'studio.krud.angkorsecurity'</option>
+                        <option>-allowaccessmodification</option>
+                        <option>-renamesourcefileattribute SourceFile</option>
+                        <option>-keepattributes Exceptions,InnerClasses,Signature</option>
+                        <option>-dontoptimize</option>
+                        <option>-dontshrink</option>
+                        <option>-ignorewarnings</option>
+                        <option>-dontnote</option>
+                    </options>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+</project>
